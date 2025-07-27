@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Interactive Leaflet Map</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    #map {
+      height: 100vh;
+    }
+    body {
+      height: 100%;
+      margin: 0%;
+    }
+  </style>
+</head>
+<body>
+  
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-database-compat.js"></script>
+
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCaFYceUq0CnWrM4xskn4GVAbGKdcZOfas",
+  authDomain: "walking1-10369.firebaseapp.com",
+  databaseURL: "https://walking1-10369-default-rtdb.firebaseio.com", // <-- Add this line!
+  projectId: "walking1-10369",
+  storageBucket: "walking1-10369.appspot.com",
+  messagingSenderId: "87191712245",
+  appId: "1:87191712245:web:667131a0783c49235cb0bc",
+  measurementId: "G-PG4MG1TQT3"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+
+
+  // Step 1: Initialize map
+  const map = L.map('map').setView([52.5200, 13.4050], 13); // Berlin coordinates 
+
+  // Step 2: Add OpenStreetMap tile layer
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  // ... your marker code ...
+
+  // --- Real-time location sharing ---
+  const userId = 'user_' + Math.random().toString(36).substr(2, 9);
+  let userMarker;
+
+  map.locate({ setView: false, maxZoom: 16, watch: true });
+
+  map.on('locationfound', function(e) {
+    // Update your location in Firebase
+    
+    db.ref('locations/' + userId).set({
+      lat: e.latlng.lat,
+      lng: e.latlng.lng
+    });
+
+    // Show your marker
+    if (userMarker) {
+      userMarker.setLatLng(e.latlng);
+    } else {
+      userMarker = L.marker(e.latlng).addTo(map)
+        .bindPopup("You are here!").openPopup();
+    }
+    map.setView(e.latlng, 16);
+  });
+
+  map.on('locationerror', function(e) {
+    alert("Location access denied.");
+  });
+
+  // Listen for all users' locations
+  
+  const otherMarkers = {};
+  db.ref('locations').on('value', snapshot => {
+    const locations = snapshot.val();
+    for (const id in locations) {
+      if (id === userId) continue; // Skip your own marker
+      const loc = locations[id];
+      if (otherMarkers[id]) {
+        otherMarkers[id].setLatLng([loc.lat, loc.lng]);
+      } else {
+        otherMarkers[id] = L.marker([loc.lat, loc.lng]).addTo(map)
+          .bindPopup("Other user");
+      }
+    }
+  });
+</script>
+</body>
+</html>
