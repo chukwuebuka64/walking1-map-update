@@ -80,6 +80,7 @@ const db = firebase.database();
     }
     map.setView(e.latlng, 16);
   });
+  userMarker = L.circleMarker(e.latlng, { color: 'blue' }).addTo(map);
 
   map.on('locationerror', function(e) {
     alert("Location access denied.");
