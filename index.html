@@ -61,7 +61,6 @@ const db = firebase.database();
   let userMarker;
   const userId = 'user_' + Math.random().toString(36).substr(2, 9);
 
-
   navigator.geolocation.watchPosition(
   position => {
     const lat = position.coords.latitude;
@@ -73,7 +72,11 @@ const db = firebase.database();
     // Show or update your marker
     const latlng = L.latLng(lat, lng);
     if (!userMarker) {
-      userMarker = L.marker(latlng).addTo(map).bindPopup("You are here").openPopup();
+    userMarker = L.circleMarker(latlng, {
+  color: 'blue',
+  radius: 8
+})
+  .addTo(map).bindPopup("You are here").openPopup();
       map.setView(latlng, 16);
     } else {
       userMarker.setLatLng(latlng);
@@ -88,23 +91,29 @@ const db = firebase.database();
     timeout: 10000
   }
  );
+ 
 
   // Listen for all users' locations
   
-  const otherMarkers = {};
-  db.ref('locations').on('value', snapshot => {
-    const locations = snapshot.val();
-    for (const id in locations) {
-      if (id === userId) continue; // Skip your own marker
-      const loc = locations[id];
-      if (otherMarkers[id]) {
-        otherMarkers[id].setLatLng([loc.lat, loc.lng]);
-      } else {
-        otherMarkers[id] = L.marker([loc.lat, loc.lng]).addTo(map)
-          .bindPopup("Other user");
-      }
+ 
+   const otherMarkers = {};
+
+db.ref('locations').on('value', snapshot => {
+  const locations = snapshot.val();
+  for (const id in locations) {
+    if (id === userId) continue;
+    const loc = locations[id];
+
+    if (otherMarkers[id]) {
+      otherMarkers[id].setLatLng([loc.lat, loc.lng]);
+    } else {
+      otherMarkers[id] = L.circleMarker([loc.lat, loc.lng], {
+        color: 'red',
+        radius: 6
+      }).addTo(map).bindPopup("Other user");
     }
-  });
+  }
+});
 </script>
 </body>
 </html>
