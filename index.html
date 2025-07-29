@@ -58,34 +58,34 @@ const db = firebase.database();
   // ... your marker code ...
 
   // --- Real-time location sharing ---
-  const userId = 'user_' + Math.random().toString(36).substr(2, 9);
   let userMarker;
 
-  map.locate({ setView: false, maxZoom: 16, watch: true });
+  navigator.geolocation.watchPosition(
+  position => {
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
 
-  map.on('locationfound', function(e) {
     // Update your location in Firebase
-    
-    db.ref('locations/' + userId).set({
-      lat: e.latlng.lat,
-      lng: e.latlng.lng
-    });
+    db.ref('locations/' + userId).set({ lat, lng });
 
-    // Show your marker
-    if (userMarker) {
-      userMarker.setLatLng(e.latlng);
+    // Show or update your marker
+    const latlng = L.latLng(lat, lng);
+    if (!userMarker) {
+      userMarker = L.marker(latlng).addTo(map).bindPopup("You are here").openPopup();
+      map.setView(latlng, 16);
     } else {
-      userMarker = L.marker(e.latlng).addTo(map)
-        .bindPopup("You are here!").openPopup();
+      userMarker.setLatLng(latlng);
     }
-    map.setView(e.latlng, 16);
-  });
-  userMarker = L.circleMarker(e.latlng, { color: 'blue' }).addTo(map);
-
-  map.on('locationerror', function(e) {
-    alert("Location access denied.");
-  });
-
+  },
+  error => {
+    alert("Error getting location: " + error.message);
+  },
+  {
+    enableHighAccuracy: true,
+    maximumAge: 0,
+    timeout: 10000
+  }
+ );
   // Listen for all users' locations
   
   const otherMarkers = {};
