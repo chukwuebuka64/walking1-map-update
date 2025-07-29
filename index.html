@@ -56,10 +56,25 @@ const db = firebase.database();
   }).addTo(map);
 
   // ... your marker code ...
+  const fixedPoints = [
+  { name: "BrewDog", lat: 52.4381957, lng: 13.3681961 },
+  { name: "NahKauf", lat: 52.4467165, lng: 13.3717101 },
+  { name: "ARSLAN DÖNER", lat: 52.4465391, lng:13.3718895  }
+  
+];
+
+fixedPoints.forEach(point => {
+  L.marker([point.lat, point.lng])
+    .addTo(map)
+    .bindPopup(point.name);
+});
+
 
   // --- Real-time location sharing ---
   let userMarker;
   const userId = 'user_' + Math.random().toString(36).substr(2, 9);
+  const userName = prompt("Enter your name:");
+  const userAvatar = "https://via.placeholder.com/40"; // You can customize this
 
   navigator.geolocation.watchPosition(
   position => {
@@ -67,7 +82,13 @@ const db = firebase.database();
     const lng = position.coords.longitude;
 
     // Update your location in Firebase
-    db.ref('locations/' + userId).set({ lat, lng });
+  db.ref('locations/' + userId).set({ 
+  lat, 
+  lng, 
+  name: userName, 
+  avatar: userAvatar 
+});
+  
 
     // Show or update your marker
     const latlng = L.latLng(lat, lng);
@@ -104,16 +125,42 @@ db.ref('locations').on('value', snapshot => {
     if (id === userId) continue;
     const loc = locations[id];
 
-    if (otherMarkers[id]) {
-      otherMarkers[id].setLatLng([loc.lat, loc.lng]);
-    } else {
-      otherMarkers[id] = L.circleMarker([loc.lat, loc.lng], {
-        color: 'red',
-        radius: 6
-      }).addTo(map).bindPopup("Other user");
-    }
+   const name = loc.name || "Anonymous";
+const avatar = loc.avatar || "https://via.placeholder.com/40";
+
+// Optional: filter to only track specific users
+const trackedUsers = ["Alice", "John"]; // Change as needed
+if (!trackedUsers.includes(name)) continue;
+
+const popupContent = `
+  <div style="text-align:center;">
+    <img src="${avatar}" width="40" height="40" style="border-radius:50%;" /><br/>
+    <strong>${name}</strong>
+  </div>
+`;
+
+if (otherMarkers[id]) {
+  otherMarkers[id].setLatLng([loc.lat, loc.lng]);
+  otherMarkers[id].bindPopup(popupContent);
+} else {
+  otherMarkers[id] = L.circleMarker([loc.lat, loc.lng], {
+    color: 'red',
+    radius: 6
+  }).addTo(map).bindPopup(popupContent);
+}
+
   }
+ // Clean up markers of users who are no longer in the database
+for (const id in otherMarkers) {
+  if (!locations[id]) {
+    map.removeLayer(otherMarkers[id]);
+    delete otherMarkers[id];
+  }
+}
+ 
 });
+
+
 </script>
 </body>
 </html>
