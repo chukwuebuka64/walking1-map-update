@@ -59,6 +59,8 @@ const db = firebase.database();
 
   // --- Real-time location sharing ---
   let userMarker;
+  const userId = 'user_' + Math.random().toString(36).substr(2, 9);
+
 
   navigator.geolocation.watchPosition(
   position => {
@@ -94,7 +96,7 @@ const db = firebase.database();
     const locations = snapshot.val();
     for (const id in locations) {
       if (id === userId) continue; // Skip your own marker
-      const loc = locations[id];mm
+      const loc = locations[id];
       if (otherMarkers[id]) {
         otherMarkers[id].setLatLng([loc.lat, loc.lng]);
       } else {
