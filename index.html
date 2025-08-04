@@ -7,7 +7,7 @@
   
   
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
   <style>
     #map {
       height: 100vh;
@@ -24,6 +24,9 @@
 <div id="map"></div>
 
 <!-- Leaflet JS -->
+ 
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-app-compat.js"></script>
@@ -50,6 +53,24 @@ const db = firebase.database();
   // Step 1: Initialize map
   const map = L.map('map').setView([52.5200, 13.4050], 13); // Berlin coordinates 
 
+  let routingControl;
+
+function routeTo(lat, lng) {
+  if (routingControl) {
+    map.removeControl(routingControl);
+  }
+
+  routingControl = L.Routing.control({
+    waypoints: [
+      userMarker ? L.latLng(userMarker.getLatLng()) : L.latLng(52.52, 13.405), // fallback if not ready
+  
+      L.latLng(lat, lng)
+    ],
+    routeWhileDragging: false
+  }).addTo(map);
+  }
+
+
   // Step 2: Add OpenStreetMap tile layer
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
@@ -64,9 +85,10 @@ const db = firebase.database();
 ];
 
 fixedPoints.forEach(point => {
-  L.marker([point.lat, point.lng])
+  const marker = L.marker
+  ([point.lat, point.lng])
     .addTo(map)
-    .bindPopup(point.name);
+    .bindPopup(`<strong>${point.name}</strong><br/><button onclick="routeTo(${point.lat}, ${point.lng})">Navigate</button>`);
 });
 
 
@@ -129,8 +151,7 @@ db.ref('locations').on('value', snapshot => {
 const avatar = loc.avatar || "https://via.placeholder.com/40";
 
 // Optional: filter to only track specific users
-const trackedUsers = ["Alice", "John"]; // Change as needed
-if (!trackedUsers.includes(name)) continue;
+
 
 const popupContent = `
   <div style="text-align:center;">
@@ -159,8 +180,15 @@ for (const id in otherMarkers) {
 }
  
 });
+map.on('click', function(e) {
+  const destLatLng = e.latlng;
+  if (confirm("Navigate to this point?")) {
+    routeTo(destLatLng.lat, destLatLng.lng);
+  }
+});
 
 
 </script>
 </body>
 </html>
+
