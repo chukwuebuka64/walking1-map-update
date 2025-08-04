@@ -25,9 +25,9 @@
 
 <!-- Leaflet JS -->
  
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-database-compat.js"></script>
@@ -37,7 +37,7 @@
 const firebaseConfig = {
   apiKey: "AIzaSyCaFYceUq0CnWrM4xskn4GVAbGKdcZOfas",
   authDomain: "walking1-10369.firebaseapp.com",
-  databaseURL: "https://walking1-10369-default-rtdb.firebaseio.com", // <-- Add this line!
+  databaseURL: "https://walking1-10369-default-rtdb.europe-west1.firebasedatabase.app", // <-- Add this line!
   projectId: "walking1-10369",
   storageBucket: "walking1-10369.appspot.com",
   messagingSenderId: "87191712245",
@@ -55,7 +55,7 @@ const db = firebase.database();
 
   let routingControl;
 
- function routeTo(lat, lng) {
+  function routeTo(lat, lng) {
   if (!userMarker) {
     alert("Your location is not available yet.");
     return;
@@ -79,6 +79,7 @@ const db = firebase.database();
     draggableWaypoints: false
   }).addTo(map);
 }
+
 
   // Step 2: Add OpenStreetMap tile layer
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -200,5 +201,6 @@ map.on('click', function(e) {
 </script>
 </body>
 </html>
+
 
 
