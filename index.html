@@ -55,21 +55,30 @@ const db = firebase.database();
 
   let routingControl;
 
-function routeTo(lat, lng) {
+ function routeTo(lat, lng) {
+  if (!userMarker) {
+    alert("Your location is not available yet.");
+    return;
+  }
+
   if (routingControl) {
     map.removeControl(routingControl);
   }
 
   routingControl = L.Routing.control({
     waypoints: [
-      userMarker ? L.latLng(userMarker.getLatLng()) : L.latLng(52.52, 13.405), // fallback if not ready
-  
+      userMarker.getLatLng(),
       L.latLng(lat, lng)
     ],
-    routeWhileDragging: false
+    routeWhileDragging: false,
+    router: L.Routing.osrmv1({
+      serviceUrl: 'https://router.project-osrm.org/route/v1'
+    }),
+    show: true,
+    addWaypoints: false,
+    draggableWaypoints: false
   }).addTo(map);
-  }
-
+}
 
   // Step 2: Add OpenStreetMap tile layer
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -191,4 +200,5 @@ map.on('click', function(e) {
 </script>
 </body>
 </html>
+
 
